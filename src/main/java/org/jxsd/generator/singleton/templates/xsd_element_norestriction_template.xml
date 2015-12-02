@@ -1,0 +1,2 @@
+<!-- ##DESC_ELEMENT## -->
+<xs:element name="##NAME_ELEMENT##" type="##TYPE_ELEMENT##" minOccurs="##MIN_OCCURS##" maxOccurs="##MAX_OCCURS##" nillable="##NULLABLE##" />

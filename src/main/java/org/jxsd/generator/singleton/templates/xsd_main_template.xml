@@ -1,0 +1,17 @@
+<xs:schema elementFormDefault="qualified" 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    xmlns:##NS##="http://xsd.generator.org/##NS##/##VERSION##/"
+    targetNamespace="http://xsd.generator.org/##NS##/##VERSION##/" 
+    ##NAMESPACES## >
+    
+    <!-- Includes -->
+            ##INCLUDES##
+    <!-- End Includes -->    
+        <xs:complexType name="##NAME##">
+            <xs:sequence>
+                <!-- Elems -->
+                        ##ELEMENTS##
+                <!-- End elems -->
+            </xs:sequence>
+        </xs:complexType>
+</xs:schema>

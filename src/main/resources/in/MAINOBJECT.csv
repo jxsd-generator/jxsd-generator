@@ -1,0 +1,3 @@
+﻿Name;Description;Min;Max;Format;Length;Nullable;Values
+Id;Identifier;1;1;N;8;;
+SUBOBJECT;Sub object;0;1;;;;

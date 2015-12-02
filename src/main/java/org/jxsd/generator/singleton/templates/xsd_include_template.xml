@@ -1,0 +1,1 @@
+<xs:import schemaLocation="##NAME##.xsd" namespace="http://xsd.generator.org/##SCHEMA##/##VERSION##/" />

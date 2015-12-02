@@ -1,0 +1,1 @@
+<bindings xmlns="http://java.sun.com/xml/ns/jaxb" xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"    xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.1">    <globalBindings>        <xjc:javaType adapter="org.jxsd.generator.utils.StringToGregorianCalendarAdapter"            name="java.util.Calendar" xmlType="xs:dateTime"></xjc:javaType>    </globalBindings></bindings>

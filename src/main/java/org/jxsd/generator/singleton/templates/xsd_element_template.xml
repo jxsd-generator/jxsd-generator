@@ -1,0 +1,9 @@
+<!-- ##DESC_ELEMENT## -->
+<xs:element name="##NAME_ELEMENT##" minOccurs="##MIN_OCCURS##" maxOccurs="##MAX_OCCURS##" nillable="##NULLABLE##">
+    <xs:simpleType>
+        <xs:restriction base="##TYPE_ELEMENT##">
+            ##RESTRICTION_LG##
+            ##RESTRICTION_ENUM##
+        </xs:restriction>
+    </xs:simpleType>
+</xs:element>
