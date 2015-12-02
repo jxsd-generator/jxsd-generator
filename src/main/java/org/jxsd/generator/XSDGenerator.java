@@ -14,7 +14,7 @@ import org.jxsd.generator.singleton.MainSingleton;
  */
 public class XSDGenerator {
 	/**
-	 * Méthode principale du programme.
+	 * Main method.
 	 * 
 	 * @param args
 	 * @throws IOException
