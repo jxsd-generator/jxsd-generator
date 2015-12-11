@@ -9,7 +9,7 @@ import java.util.Locale;
 /**
  * Date utils class.
  *
- * @author Idriss Neumann <idriss.neumann@capgemini.com>
+ * @author Idriss Neumann <neumann.idriss@gmail.com>
  */
 public class DateUtils {
     public static final String FORMAT_DATE = "yyyy-MM-dd";
@@ -46,7 +46,7 @@ public class DateUtils {
             cal.setTime(date);
             return cal;
         } catch (ParseException ex) {
-            throw new RuntimeException("Unknwown : \"" + format + "\" -> \"" + str + "\"", ex);
+            throw new RuntimeException("Unknwown date format : \"" + format + "\" -> \"" + str + "\"", ex);
         }
     }
 
