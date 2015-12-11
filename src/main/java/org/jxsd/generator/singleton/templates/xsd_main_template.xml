@@ -4,6 +4,8 @@
     targetNamespace="http://xsd.generator.org/##NS##/##VERSION##/" 
     ##NAMESPACES## >
     
+    <!-- generated on ##GENERATION_DATE## -->
+    
     <!-- Includes -->
             ##INCLUDES##
     <!-- End Includes -->    

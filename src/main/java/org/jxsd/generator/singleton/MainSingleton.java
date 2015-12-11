@@ -1,5 +1,6 @@
 package org.jxsd.generator.singleton;
 
+import static java.util.Calendar.getInstance;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -10,6 +11,8 @@ import static org.jxsd.generator.XSDConstants.CSV_FILE;
 import static org.jxsd.generator.XSDConstants.KEY_DIR_IN;
 import static org.jxsd.generator.XSDConstants.KEY_DIR_OUT;
 import static org.jxsd.generator.XSDConstants.XSD_FORMAT_INT;
+import static org.jxsd.generator.utils.DateUtils.FORMAT_DATE_HOUR;
+import static org.jxsd.generator.utils.DateUtils.calendarToString;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,174 +40,177 @@ import org.apache.commons.lang3.mutable.MutableInt;
  */
 @Singleton
 public class MainSingleton {
-	@Inject
-	private SimpleLogger LOGGER;
+    @Inject
+    private SimpleLogger LOGGER;
 
-	@Inject
-	private PropertyReader propReader;
+    @Inject
+    private PropertyReader propReader;
 
-	@Inject
-	private CSVLoader loader;
+    @Inject
+    private CSVLoader loader;
 
-	@Inject
-	private XSDTemplateReader tplReader;
+    @Inject
+    private XSDTemplateReader tplReader;
 
-	@Inject
-	private Transcoding transco;
+    @Inject
+    private Transcoding transco;
 
-	@Inject
-	private FileUtils fileUtils;
+    @Inject
+    private FileUtils fileUtils;
 
-	private String version = "0";
+    private String version = "0";
 
-	/**
-	 * Traitement.
-	 * 
-	 * @param pathInDir
-	 * @param pathOutDir
-	 * @throws IOException
-	 */
-	public void run() throws IOException {
-		String pathInDir = propReader.get(APP_CONFIG_FILE, KEY_DIR_IN);
-		String pathOutDir = propReader.get(APP_CONFIG_FILE, KEY_DIR_OUT);
-		LOGGER.info("MainSingleton", "Scanning " + pathInDir);
+    /**
+     * Traitement.
+     * 
+     * @param pathInDir
+     * @param pathOutDir
+     * @throws IOException
+     */
+    public void run() throws IOException {
+        String pathInDir = propReader.get(APP_CONFIG_FILE, KEY_DIR_IN);
+        String pathOutDir = propReader.get(APP_CONFIG_FILE, KEY_DIR_OUT);
+        LOGGER.info("MainSingleton", "Scanning " + pathInDir);
 
-		File dirIn = new File(pathInDir);
-		File[] children = dirIn.listFiles();
+        File dirIn = new File(pathInDir);
+        File[] children = dirIn.listFiles();
 
-		if (null == children || children.length <= 0) {
-			LOGGER.info("MainSingleton|run", "There's no CSV file to process...");
-			return;
-		}
+        String generationDate = calendarToString(getInstance(), FORMAT_DATE_HOUR);
 
-		for (File child : children) {
-			String nameElem = child.getName();
+        if (null == children || children.length <= 0) {
+            LOGGER.info("MainSingleton|run", "There's no CSV file to process...");
+            return;
+        }
 
-			if (nameElem.equalsIgnoreCase("VERSION") || nameElem.equalsIgnoreCase("VERSION.txt")) {
-				version = fileUtils.file2stringQuietly(new FileInputStream(child));
-				break;
-			}
-		}
+        for (File child : children) {
+            String nameElem = child.getName();
 
-		for (File child : children) {
-			String nameElem = child.getName();
+            if (nameElem.equalsIgnoreCase("VERSION") || nameElem.equalsIgnoreCase("VERSION.txt")) {
+                version = fileUtils.file2stringQuietly(new FileInputStream(child));
+                break;
+            }
+        }
 
-			if (!nameElem.toLowerCase().matches(CSV_FILE)) {
-				continue;
-			}
+        for (File child : children) {
+            String nameElem = child.getName();
 
-			LOGGER.info("MainSingleton|run", "Processing " + nameElem);
-			CSVParser parser = loader.load(child);
+            if (!nameElem.toLowerCase().matches(CSV_FILE)) {
+                continue;
+            }
 
-			StringJoiner content = new StringJoiner("\r\n\t\t");
-			StringJoiner includes = new StringJoiner("\r\n\t\t");
-			StringJoiner namespace = new StringJoiner("\r\n");
-			MutableInt i = new MutableInt(0);
-			String root = FilenameUtils.removeExtension(child.getName());
-			parser.forEach(r -> processRecord(root, r, content, includes, namespace, i, version));
+            LOGGER.info("MainSingleton|run", "Processing " + nameElem);
+            CSVParser parser = loader.load(child);
 
-			fileUtils.string2fileQuietly(pathOutDir + File.separator + "binding.xjb", tplReader.getXjbBindingTemplate());
+            StringJoiner content = new StringJoiner("\r\n\t\t");
+            StringJoiner includes = new StringJoiner("\r\n\t\t");
+            StringJoiner namespace = new StringJoiner("\r\n");
+            MutableInt i = new MutableInt(0);
+            String root = FilenameUtils.removeExtension(child.getName());
+            parser.forEach(r -> processRecord(root, r, content, includes, namespace, i, version));
 
-			Map<String, String> replacements = new HashMap<String, String>();
-			replacements.put("INCLUDES", includes.toString());
-			replacements.put("ELEMENTS", content.toString());
-			replacements.put("NS", root.toLowerCase());
-			replacements.put("NAME", root.toUpperCase());
-			replacements.put("NAMESPACES", namespace.toString());
-			replacements.put("VERSION", version);
+            fileUtils.string2fileQuietly(pathOutDir + File.separator + "binding.xjb", tplReader.getXjbBindingTemplate());
 
-			String finalContent = tplReader.format(tplReader.getXsdMainTemplate(), replacements);
+            Map<String, String> replacements = new HashMap<String, String>();
+            replacements.put("INCLUDES", includes.toString());
+            replacements.put("ELEMENTS", content.toString());
+            replacements.put("NS", root.toLowerCase());
+            replacements.put("NAME", root.toUpperCase());
+            replacements.put("NAMESPACES", namespace.toString());
+            replacements.put("VERSION", version);
+            replacements.put("GENERATION_DATE", generationDate);
 
-			fileUtils.string2fileQuietly(pathOutDir + File.separator + root + ".xsd", finalContent);
+            String finalContent = tplReader.format(tplReader.getXsdMainTemplate(), replacements);
 
-			parser.close();
-		}
-	}
+            fileUtils.string2fileQuietly(pathOutDir + File.separator + root + ".xsd", finalContent);
 
-	/**
-	 * Traiter un enregistrement.
-	 * 
-	 * @param r
-	 */
-	private void processRecord(String root, CSVRecord r, StringJoiner content, StringJoiner includes, StringJoiner namespace, MutableInt i, String version) {
-		// On saute l'entête
-		if (i.getValue() == 0) {
-			i.add(1);
-			return;
-		}
+            parser.close();
+        }
+    }
 
-		String type = null;
-		String nom = r.get("Name").toLowerCase().trim();
-		String format = (isNotEmpty(r.get("Format"))) ? r.get("Format").toUpperCase().trim() : nom;
-		if (!transco.getCsvToXsdTypes().containsKey(format)) {
-			type = String.format("%s:%s", nom.toLowerCase(), nom.toUpperCase());
+    /**
+     * Traiter un enregistrement.
+     * 
+     * @param r
+     */
+    private void processRecord(String root, CSVRecord r, StringJoiner content, StringJoiner includes, StringJoiner namespace, MutableInt i, String version) {
+        // On saute l'entête
+        if (i.getValue() == 0) {
+            i.add(1);
+            return;
+        }
 
-			Map<String, String> repInc = new HashMap<String, String>();
-			repInc.put("NAME", nom.toUpperCase().trim());
-			repInc.put("SCHEMA", nom);
-			repInc.put("NS", nom.toLowerCase().trim());
-			repInc.put("VERSION", version);
+        String type = null;
+        String nom = r.get("Name").toLowerCase().trim();
+        String format = (isNotEmpty(r.get("Format"))) ? r.get("Format").toUpperCase().trim() : nom;
+        if (!transco.getCsvToXsdTypes().containsKey(format)) {
+            type = String.format("%s:%s", nom.toLowerCase(), nom.toUpperCase());
 
-			includes.add(tplReader.format(tplReader.getXsdIncludeTemplate(), repInc));
-			namespace.add(tplReader.format(tplReader.getXsdNamespaceTemplate(), repInc));
-		} else {
-			type = transco.getCsvToXsdTypes().get(format.toUpperCase());
-		}
+            Map<String, String> repInc = new HashMap<String, String>();
+            repInc.put("NAME", nom.toUpperCase().trim());
+            repInc.put("SCHEMA", nom);
+            repInc.put("NS", nom.toLowerCase().trim());
+            repInc.put("VERSION", version);
 
-		String elem = null;
-		String lg = r.get("Length");
-		String nullable = r.get("Nullable");
-		if (!"true".equalsIgnoreCase(nullable.trim())) {
-			nullable = "false";
-		}
+            includes.add(tplReader.format(tplReader.getXsdIncludeTemplate(), repInc));
+            namespace.add(tplReader.format(tplReader.getXsdNamespaceTemplate(), repInc));
+        } else {
+            type = transco.getCsvToXsdTypes().get(format.toUpperCase());
+        }
 
-		Map<String, String> replacements = new HashMap<String, String>();
-		replacements.put("NULLABLE", nullable.trim().toLowerCase());
-		replacements.put("NAME_ELEMENT", r.get("Name").trim());
-		replacements.put("TYPE_ELEMENT", type);
-		replacements.put("DESC_ELEMENT", r.get("Description"));
-		replacements.put("MIN_OCCURS", (isEmpty(r.get("Min")) || !isNumeric(r.get("Min").trim())) ? "0" : r.get("Min").trim());
-		replacements.put("MAX_OCCURS", (isEmpty(r.get("Max")) || !isNumeric(r.get("Max").trim())) ? "unbounded" : r.get("Max").trim());
-		replacements.put("VERSION", version);
+        String elem = null;
+        String lg = r.get("Length");
+        String nullable = r.get("Nullable");
+        if (!"true".equalsIgnoreCase(nullable.trim())) {
+            nullable = "false";
+        }
 
-		List<String> values = new ArrayList<String>();
-		String strValues = r.get("Values");
+        Map<String, String> replacements = new HashMap<String, String>();
+        replacements.put("NULLABLE", nullable.trim().toLowerCase());
+        replacements.put("NAME_ELEMENT", r.get("Name").trim());
+        replacements.put("TYPE_ELEMENT", type);
+        replacements.put("DESC_ELEMENT", r.get("Description"));
+        replacements.put("MIN_OCCURS", (isEmpty(r.get("Min")) || !isNumeric(r.get("Min").trim())) ? "0" : r.get("Min").trim());
+        replacements.put("MAX_OCCURS", (isEmpty(r.get("Max")) || !isNumeric(r.get("Max").trim())) ? "unbounded" : r.get("Max").trim());
+        replacements.put("VERSION", version);
 
-		if (isNotEmpty(strValues) && strValues.contains("|")) {
-			Arrays.asList(strValues.split("\\|")).stream().filter(item -> isNotBlank(item)).forEach(item -> values.add(item.trim()));
-		} else if (isNotBlank(strValues)) {
-			values.add(strValues);
-		}
+        List<String> values = new ArrayList<String>();
+        String strValues = r.get("Values");
 
-		if ((isNotEmpty(lg) && !XSD_FORMAT_INT.equalsIgnoreCase(type)) || isNotEmpty(values)) {
-			replacements.put("MAX_LG", lg);
-			replacements.put("RESTRICTION_ENUM", "");
-			replacements.put("RESTRICTION_LG", "");
+        if (isNotEmpty(strValues) && strValues.contains("|")) {
+            Arrays.asList(strValues.split("\\|")).stream().filter(item -> isNotBlank(item)).forEach(item -> values.add(item.trim()));
+        } else if (isNotBlank(strValues)) {
+            values.add(strValues);
+        }
 
-			if (isNotEmpty(values)) {
-				StringJoiner joiner = new StringJoiner("\r\n\t\t\t");
+        if ((isNotEmpty(lg) && !XSD_FORMAT_INT.equalsIgnoreCase(type)) || isNotEmpty(values)) {
+            replacements.put("MAX_LG", lg);
+            replacements.put("RESTRICTION_ENUM", "");
+            replacements.put("RESTRICTION_LG", "");
 
-				for (String val : values) {
-					Map<String, String> replacements2 = new HashMap<String, String>();
-					replacements2.put("VALUES", val);
-					joiner.add(tplReader.format(tplReader.getXsdEnumTemplate(), replacements2));
-				}
+            if (isNotEmpty(values)) {
+                StringJoiner joiner = new StringJoiner("\r\n\t\t\t");
 
-				replacements.put("RESTRICTION_ENUM", joiner.toString());
-			}
+                for (String val : values) {
+                    Map<String, String> replacements2 = new HashMap<String, String>();
+                    replacements2.put("VALUES", val);
+                    joiner.add(tplReader.format(tplReader.getXsdEnumTemplate(), replacements2));
+                }
 
-			// Pas de longueur pour les int
-			if (isNotEmpty(lg) && !XSD_FORMAT_INT.equalsIgnoreCase(type)) {
-				String lngFragment = tplReader.format(tplReader.getXsdLgTemplate(), replacements);
-				replacements.put("RESTRICTION_LG", lngFragment);
-			}
+                replacements.put("RESTRICTION_ENUM", joiner.toString());
+            }
 
-			elem = tplReader.format(tplReader.getXsdElementTemplate(), replacements);
-		} else {
-			elem = tplReader.format(tplReader.getXsdElementNoRestrictionTemplate(), replacements);
-		}
+            // Pas de longueur pour les int
+            if (isNotEmpty(lg) && !XSD_FORMAT_INT.equalsIgnoreCase(type)) {
+                String lngFragment = tplReader.format(tplReader.getXsdLgTemplate(), replacements);
+                replacements.put("RESTRICTION_LG", lngFragment);
+            }
 
-		content.add(elem);
-		i.add(1);
-	}
+            elem = tplReader.format(tplReader.getXsdElementTemplate(), replacements);
+        } else {
+            elem = tplReader.format(tplReader.getXsdElementNoRestrictionTemplate(), replacements);
+        }
+
+        content.add(elem);
+        i.add(1);
+    }
 }

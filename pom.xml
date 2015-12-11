@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>jxsd-generator</groupId>
     <artifactId>jxsd-generator</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>XSD Generator from CSV files</name>
 
     <properties>
