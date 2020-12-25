@@ -1,4 +1,12 @@
 # jxsd-generator
+
 XSD generator from CSV files
 
-See the wiki to get more information : https://github.com/jxsd-generator/jxsd-generator/wiki
+## Git repo
+
+* Main repo: https://gitlab.comwork.io/oss/jxsd-generator
+* Github mirror backup: https://github.com/jxsd-generator/jxsd-generator
+
+## Documentation
+
+* [Getting started](./docs/getting-started.md)
