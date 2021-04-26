@@ -12,7 +12,7 @@
         <commons-csv.version>1.2</commons-csv.version>
         <commons-apache.version>3.3.2</commons-apache.version>
         <commons-collections.version>3.2.2</commons-collections.version>
-        <commons-io.version>2.4</commons-io.version>
+        <commons-io.version>2.7</commons-io.version>
         <cdi-api.version>1.2</cdi-api.version>
         <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
         <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
