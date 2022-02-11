@@ -7,6 +7,7 @@ XSD generator from CSV files
 * Main repo: https://gitlab.comwork.io/oss/jxsd-generator
 * Github mirror backup: https://github.com/jxsd-generator/jxsd-generator
 * Gitlab mirror backup: https://gitlab.com/ineumann/jxsd-generator
+* Bitbucket mirror backup: https://bitbucket.org/idrissneumann/jxsd-generator
 
 ## Documentation
 
